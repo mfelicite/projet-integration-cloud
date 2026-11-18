@@ -1,8 +1,12 @@
+get http://localhost:8080/api/users/me?username=matthieu
+
+###
+
 post http://localhost:8080/api/users/register
 Content-Type: application/json
 
 {
-    "username": "lea",
+    "username": "matthieu",
     "password": "1234"
 }
 
@@ -12,6 +16,24 @@ post http://localhost:8080/api/users/login
 Content-Type: application/json
 
 {
-    "username": "lea",
+    "username": "matthieu",
     "password": "1234"
+}
+
+###
+
+patch http://localhost:8080/api/users/matthieu/credit
+Content-Type: application/json
+
+{
+    "amount": 100
+}
+
+###
+
+patch http://localhost:8080/api/users/matthieu/debit
+Content-Type: application/json
+
+{
+    "amount": 100
 }

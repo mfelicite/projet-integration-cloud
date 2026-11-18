@@ -1,10 +1,16 @@
 package com.casino.userservice;
 
+import com.casino.userservice.dto.CreditRequestDto;
+import com.casino.userservice.dto.CreditResponseDto;
+import com.casino.userservice.dto.DebitRequestDto;
+import com.casino.userservice.dto.DebitResponseDto;
 import com.casino.userservice.dto.LoginRequestDto;
 import com.casino.userservice.dto.LoginResponseDto;
+import com.casino.userservice.dto.MeResponseDto;
 import com.casino.userservice.dto.RegisterRequestDto;
 import com.casino.userservice.dto.RegisterResponseDto;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -25,6 +31,18 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
     
+    @GetMapping("/me")
+    public MeResponseDto me(@RequestParam String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+            
+        return new MeResponseDto.Builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .balance(user.getBalance())
+            .build();
+    }
+    
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public RegisterResponseDto register(@Valid @RequestBody RegisterRequestDto registerRequestDto) {
@@ -42,6 +60,7 @@ public class UserController {
         return new RegisterResponseDto.Builder()
             .id(savedUser.getId())
             .username(savedUser.getUsername())
+            .balance(savedUser.getBalance())
             .build();
     }
     
@@ -57,6 +76,45 @@ public class UserController {
         return new LoginResponseDto.Builder()
             .id(user.getId())
             .username(user.getUsername())
+            .balance(user.getBalance())
+            .build();
+    }
+    
+    @PatchMapping("/{username}/debit")
+    @Transactional 
+    public DebitResponseDto debit(@PathVariable String username, @Valid @RequestBody DebitRequestDto debitRequestDto) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+            
+        try {
+            user.debit(debitRequestDto.amount());
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+        }
+        
+        return new DebitResponseDto.Builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .balance(user.getBalance())
+            .build();
+    }
+    
+    @PatchMapping("/{username}/credit")
+    @Transactional 
+    public CreditResponseDto debit(@PathVariable String username, @Valid @RequestBody CreditRequestDto creditRequestDto) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+            
+        try {
+            user.credit(creditRequestDto.amount());
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
+        }
+        
+        return new CreditResponseDto.Builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .balance(user.getBalance())
             .build();
     }
 }
